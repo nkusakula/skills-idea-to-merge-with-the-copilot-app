@@ -89,6 +89,26 @@ export function loadBookmarks(raw) {
 }
 
 /**
+ * Update a bookmark URL without changing its slug.
+ *
+ * @param {Array<{ url: string; slug: string }>} bookmarks
+ * @param {string} slug
+ * @param {unknown} input
+ * @returns {Array<{ url: string; slug: string }> | null}
+ */
+export function updateBookmarkUrl(bookmarks, slug, input) {
+  const normalized = normalizeUrl(input);
+  if (!normalized || !Array.isArray(bookmarks)) return null;
+
+  const index = bookmarks.findIndex((bookmark) => bookmark.slug === slug);
+  if (index === -1) return null;
+
+  return bookmarks.map((bookmark, currentIndex) =>
+    currentIndex === index ? { ...bookmark, url: normalized } : bookmark,
+  );
+}
+
+/**
  * Render a single bookmark using the exact " :: " separator the app shows
  * between the URL and its slug, e.g. "https://example.com :: mona-7fk2".
  *

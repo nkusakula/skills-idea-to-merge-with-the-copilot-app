@@ -48,6 +48,7 @@
     STORAGE_KEY,
     normalizeUrl,
     loadBookmarks,
+    updateBookmarkUrl,
     formatBookmark,
     createSlug,
   } from '../lib/bookmarks.js';
@@ -92,6 +93,12 @@
     urlError.hidden = true;
   }
 
+  function focusEditButton(slug: string) {
+    list
+      ?.querySelector<HTMLButtonElement>(`.edit[data-slug="${slug}"]`)
+      ?.focus();
+  }
+
   function render(bookmarks: Array<{ url: string; slug: string }>) {
     if (!list || !emptyState || !listHeader) return;
 
@@ -124,13 +131,80 @@
       copyButton.type = 'button';
       copyButton.className = 'copy';
       copyButton.textContent = 'Copy';
+      copyButton.ariaLabel = `Copy slug ${bookmark.slug}`;
       copyButton.addEventListener('click', () => {
         navigator.clipboard?.writeText(bookmark.slug).catch(() => {
           // Clipboard access can be denied/unavailable — nothing to recover.
         });
       });
 
-      li.append(link, separator, slug, copyButton);
+      const editButton = document.createElement('button');
+      editButton.type = 'button';
+      editButton.className = 'edit';
+      editButton.textContent = 'Edit';
+      editButton.ariaLabel = `Edit ${bookmark.url}`;
+      editButton.dataset.slug = bookmark.slug;
+      editButton.addEventListener('click', () => {
+        const editForm = document.createElement('form');
+        editForm.className = 'edit-form';
+
+        const field = document.createElement('div');
+        field.className = 'field';
+
+        const label = document.createElement('label');
+        const inputId = `edit-${bookmark.slug}`;
+        label.htmlFor = inputId;
+        label.textContent = `Edit link for ${bookmark.slug}`;
+
+        const input = document.createElement('input');
+        input.id = inputId;
+        input.type = 'text';
+        input.inputMode = 'url';
+        input.value = bookmark.url;
+        input.required = true;
+
+        const error = document.createElement('p');
+        const errorId = `${inputId}-error`;
+        error.id = errorId;
+        error.className = 'error';
+        error.role = 'alert';
+        input.setAttribute('aria-describedby', errorId);
+
+        const saveButton = document.createElement('button');
+        saveButton.type = 'submit';
+        saveButton.textContent = 'Save';
+
+        const cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.className = 'cancel';
+        cancelButton.textContent = 'Cancel';
+        cancelButton.addEventListener('click', () => {
+          render(bookmarks);
+          focusEditButton(bookmark.slug);
+        });
+
+        editForm.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const updated = updateBookmarkUrl(bookmarks, bookmark.slug, input.value);
+          if (!updated) {
+            input.ariaInvalid = 'true';
+            error.textContent = 'Enter a valid URL, e.g. example.com or https://example.com.';
+            return;
+          }
+
+          writeStoredBookmarks(updated);
+          render(updated);
+          focusEditButton(bookmark.slug);
+        });
+
+        field.append(label, input, error);
+        editForm.append(field, saveButton, cancelButton);
+        li.replaceChildren(editForm);
+        input.focus();
+        input.select();
+      });
+
+      li.append(link, separator, slug, copyButton, editButton);
       list.appendChild(li);
     }
   }

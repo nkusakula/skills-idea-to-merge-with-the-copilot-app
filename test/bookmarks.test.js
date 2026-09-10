@@ -8,6 +8,7 @@ import {
   normalizeUrl,
   isValidBookmark,
   loadBookmarks,
+  updateBookmarkUrl,
   formatBookmark,
   createSlug,
 } from '../src/lib/bookmarks.js';
@@ -102,6 +103,26 @@ test('isValidBookmark: accepts well-formed entries and rejects the rest', () => 
   assert.equal(isValidBookmark('string'), false);
   assert.equal(isValidBookmark({ url: 'https://example.com' }), false);
   assert.equal(isValidBookmark({ slug: 'mona-7fk2' }), false);
+});
+
+test('updateBookmarkUrl: normalizes the new URL and preserves the slug', () => {
+  const bookmarks = [
+    { url: 'https://old.example.com', slug: 'mona-7fk2' },
+    { url: 'https://other.example.com', slug: 'mona-abcd' },
+  ];
+
+  assert.deepEqual(updateBookmarkUrl(bookmarks, 'mona-7fk2', 'new.example.com'), [
+    { url: 'https://new.example.com', slug: 'mona-7fk2' },
+    { url: 'https://other.example.com', slug: 'mona-abcd' },
+  ]);
+  assert.equal(bookmarks[0].url, 'https://old.example.com');
+});
+
+test('updateBookmarkUrl: rejects an invalid URL or unknown slug', () => {
+  const bookmarks = [{ url: 'https://example.com', slug: 'mona-7fk2' }];
+
+  assert.equal(updateBookmarkUrl(bookmarks, 'mona-7fk2', '   '), null);
+  assert.equal(updateBookmarkUrl(bookmarks, 'mona-missing', 'new.example.com'), null);
 });
 
 test('formatBookmark: formats as "<url> :: <slug>" with the exact " :: " separator', () => {
