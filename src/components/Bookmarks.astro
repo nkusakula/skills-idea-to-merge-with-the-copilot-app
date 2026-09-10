@@ -93,6 +93,12 @@
     urlError.hidden = true;
   }
 
+  function focusEditButton(slug: string) {
+    list
+      ?.querySelector<HTMLButtonElement>(`.edit[data-slug="${slug}"]`)
+      ?.focus();
+  }
+
   function render(bookmarks: Array<{ url: string; slug: string }>) {
     if (!list || !emptyState || !listHeader) return;
 
@@ -137,6 +143,7 @@
       editButton.className = 'edit';
       editButton.textContent = 'Edit';
       editButton.ariaLabel = `Edit ${bookmark.url}`;
+      editButton.dataset.slug = bookmark.slug;
       editButton.addEventListener('click', () => {
         const editForm = document.createElement('form');
         editForm.className = 'edit-form';
@@ -159,7 +166,6 @@
         const error = document.createElement('p');
         error.className = 'error';
         error.role = 'alert';
-        error.hidden = true;
 
         const saveButton = document.createElement('button');
         saveButton.type = 'submit';
@@ -169,19 +175,22 @@
         cancelButton.type = 'button';
         cancelButton.className = 'cancel';
         cancelButton.textContent = 'Cancel';
-        cancelButton.addEventListener('click', () => render(bookmarks));
+        cancelButton.addEventListener('click', () => {
+          render(bookmarks);
+          focusEditButton(bookmark.slug);
+        });
 
         editForm.addEventListener('submit', (event) => {
           event.preventDefault();
           const updated = updateBookmarkUrl(bookmarks, bookmark.slug, input.value);
           if (!updated) {
             error.textContent = 'Enter a valid URL, e.g. example.com or https://example.com.';
-            error.hidden = false;
             return;
           }
 
           writeStoredBookmarks(updated);
           render(updated);
+          focusEditButton(bookmark.slug);
         });
 
         field.append(label, input, error);
