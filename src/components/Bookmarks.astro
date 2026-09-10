@@ -48,6 +48,7 @@
     STORAGE_KEY,
     normalizeUrl,
     loadBookmarks,
+    updateBookmarkUrl,
     formatBookmark,
     createSlug,
   } from '../lib/bookmarks.js';
@@ -130,7 +131,65 @@
         });
       });
 
-      li.append(link, separator, slug, copyButton);
+      const editButton = document.createElement('button');
+      editButton.type = 'button';
+      editButton.className = 'edit';
+      editButton.textContent = 'Edit';
+      editButton.addEventListener('click', () => {
+        const editForm = document.createElement('form');
+        editForm.className = 'edit-form';
+
+        const field = document.createElement('div');
+        field.className = 'field';
+
+        const label = document.createElement('label');
+        const inputId = `edit-${bookmark.slug}`;
+        label.htmlFor = inputId;
+        label.textContent = 'Link to save';
+
+        const input = document.createElement('input');
+        input.id = inputId;
+        input.type = 'text';
+        input.inputMode = 'url';
+        input.value = bookmark.url;
+        input.required = true;
+
+        const error = document.createElement('p');
+        error.className = 'error';
+        error.role = 'alert';
+        error.hidden = true;
+
+        const saveButton = document.createElement('button');
+        saveButton.type = 'submit';
+        saveButton.textContent = 'Save';
+
+        const cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.className = 'cancel';
+        cancelButton.textContent = 'Cancel';
+        cancelButton.addEventListener('click', () => render(bookmarks));
+
+        editForm.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const updated = updateBookmarkUrl(bookmarks, bookmark.slug, input.value);
+          if (!updated) {
+            error.textContent = 'Enter a valid URL, e.g. example.com or https://example.com.';
+            error.hidden = false;
+            return;
+          }
+
+          writeStoredBookmarks(updated);
+          render(updated);
+        });
+
+        field.append(label, input, error);
+        editForm.append(field, saveButton, cancelButton);
+        li.replaceChildren(editForm);
+        input.focus();
+        input.select();
+      });
+
+      li.append(link, separator, slug, copyButton, editButton);
       list.appendChild(li);
     }
   }
