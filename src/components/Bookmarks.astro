@@ -164,8 +164,11 @@
         input.required = true;
 
         const error = document.createElement('p');
+        const errorId = `${inputId}-error`;
+        error.id = errorId;
         error.className = 'error';
         error.role = 'alert';
+        input.setAttribute('aria-describedby', errorId);
 
         const saveButton = document.createElement('button');
         saveButton.type = 'submit';
@@ -184,6 +187,7 @@
           event.preventDefault();
           const updated = updateBookmarkUrl(bookmarks, bookmark.slug, input.value);
           if (!updated) {
+            input.ariaInvalid = 'true';
             error.textContent = 'Enter a valid URL, e.g. example.com or https://example.com.';
             return;
           }
