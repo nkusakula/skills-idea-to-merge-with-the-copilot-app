@@ -125,6 +125,7 @@
       copyButton.type = 'button';
       copyButton.className = 'copy';
       copyButton.textContent = 'Copy';
+      copyButton.ariaLabel = `Copy slug ${bookmark.slug}`;
       copyButton.addEventListener('click', () => {
         navigator.clipboard?.writeText(bookmark.slug).catch(() => {
           // Clipboard access can be denied/unavailable — nothing to recover.
@@ -135,6 +136,7 @@
       editButton.type = 'button';
       editButton.className = 'edit';
       editButton.textContent = 'Edit';
+      editButton.ariaLabel = `Edit ${bookmark.url}`;
       editButton.addEventListener('click', () => {
         const editForm = document.createElement('form');
         editForm.className = 'edit-form';
@@ -145,7 +147,7 @@
         const label = document.createElement('label');
         const inputId = `edit-${bookmark.slug}`;
         label.htmlFor = inputId;
-        label.textContent = 'Link to save';
+        label.textContent = `Edit link for ${bookmark.slug}`;
 
         const input = document.createElement('input');
         input.id = inputId;
